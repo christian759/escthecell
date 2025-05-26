@@ -4,13 +4,17 @@ class Cell:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.walls = {'N': True, 'S': True, 'E': True, 'W': True}
+        self.walls = {
+            'N': True, 'S': True, 'E': True, 'W': True,
+            'NE': False, 'NW': False, 'SE': False, 'SW': False
+        }
         self.visited = False
 
     def remove_wall(self, other, direction):
         self.walls[direction] = False
         opposites = {'N': 'S', 'S': 'N', 'E': 'W', 'W': 'E'}
-        other.walls[opposites[direction]] = False
+        if direction in opposites:
+            other.walls[opposites[direction]] = False
 
 def init_grid(width, height):
     return [[Cell(x, y) for y in range(height)] for x in range(width)]
@@ -39,6 +43,34 @@ def carve_passages_from(cx, cy, grid, width, height):
         else:
             stack.pop()
 
+    # Add diagonal markers
+    for x in range(width):
+        for y in range(height):
+            cell = grid[x][y]
+            # Corners
+            if cell.walls['N'] and cell.walls['W']:
+                cell.walls['NW'] = True
+            if cell.walls['N'] and cell.walls['E']:
+                cell.walls['NE'] = True
+            if cell.walls['S'] and cell.walls['W']:
+                cell.walls['SW'] = True
+            if cell.walls['S'] and cell.walls['E']:
+                cell.walls['SE'] = True
+
+            # Vertical alignment
+            if in_bounds(x, y + 1, width, height):
+                below = grid[x][y + 1]
+                if cell.walls['S'] and below.walls['N']:
+                    cell.walls['SE'] = True
+                    cell.walls['SW'] = True
+
+            # Horizontal alignment
+            if in_bounds(x + 1, y, width, height):
+                right = grid[x + 1][y]
+                if cell.walls['E'] and right.walls['W']:
+                    cell.walls['NE'] = True
+                    cell.walls['SE'] = True
+
 def generate_maze(difficulty=10):
     difficulty = max(1, min(difficulty, 100))
     size = 5 + difficulty
@@ -51,10 +83,8 @@ def generate_maze(difficulty=10):
     start_y = height - 1
     carve_passages_from(start_x, start_y, grid, width, height)
 
-    # Open entry at bottom center
+    # Open entry and exit
     grid[start_x][height - 1].walls['S'] = False
-
-    # Open exit at top center
     grid[start_x][0].walls['N'] = False
 
     return grid, width, height
@@ -79,10 +109,8 @@ def print_maze(grid, width, height):
             line += " " if not cell.walls['E'] else "|"
         print(line)
 
+
 if __name__ == "__main__":
-    try:
-        level = int(input("Enter difficulty (1 = easy, 10 = medium, 50 = hard): ").strip())
-    except ValueError:
-        level = 10
+    level = int(input("enter the maze size: "))
     maze, w, h = generate_maze(level)
     print_maze(maze, w, h)
