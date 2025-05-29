@@ -6,7 +6,7 @@ class Cell:
         self.y = y
         self.walls = {
             'N': True, 'S': True, 'E': True, 'W': True,
-            'NE': False, 'NW': False, 'SE': False, 'SW': False
+            'NE': True, 'NW': True, 'SE': True, 'SW': True
         }
         self.visited = False
 
@@ -16,11 +16,14 @@ class Cell:
         if direction in opposites:
             other.walls[opposites[direction]] = False
 
+
 def init_grid(width, height):
     return [[Cell(x, y) for y in range(height)] for x in range(width)]
 
+
 def in_bounds(x, y, width, height):
     return 0 <= x < width and 0 <= y < height
+
 
 def carve_passages_from(cx, cy, grid, width, height):
     stack = [(cx, cy)]
@@ -43,33 +46,15 @@ def carve_passages_from(cx, cy, grid, width, height):
         else:
             stack.pop()
 
-    # Add diagonal markers
+    # Set all diagonal corners to True to ensure corner coverage
     for x in range(width):
         for y in range(height):
             cell = grid[x][y]
-            # Corners
-            if cell.walls['N'] and cell.walls['W']:
-                cell.walls['NW'] = True
-            if cell.walls['N'] and cell.walls['E']:
-                cell.walls['NE'] = True
-            if cell.walls['S'] and cell.walls['W']:
-                cell.walls['SW'] = True
-            if cell.walls['S'] and cell.walls['E']:
-                cell.walls['SE'] = True
+            cell.walls['NE'] = True
+            cell.walls['NW'] = True
+            cell.walls['SE'] = True
+            cell.walls['SW'] = True
 
-            # Vertical alignment
-            if in_bounds(x, y + 1, width, height):
-                below = grid[x][y + 1]
-                if cell.walls['S'] and below.walls['N']:
-                    cell.walls['SE'] = True
-                    cell.walls['SW'] = True
-
-            # Horizontal alignment
-            if in_bounds(x + 1, y, width, height):
-                right = grid[x + 1][y]
-                if cell.walls['E'] and right.walls['W']:
-                    cell.walls['NE'] = True
-                    cell.walls['SE'] = True
 
 def generate_maze(difficulty=10):
     difficulty = max(1, min(difficulty, 100))
@@ -77,17 +62,14 @@ def generate_maze(difficulty=10):
     width = height = size
 
     grid = init_grid(width, height)
-
-    # Start carving from bottom center
     start_x = width // 2
     start_y = height - 1
     carve_passages_from(start_x, start_y, grid, width, height)
-
-    # Open entry and exit
     grid[start_x][height - 1].walls['S'] = False
     grid[start_x][0].walls['N'] = False
 
     return grid, width, height
+
 
 def print_maze(grid, width, height):
     # Print top boundary line including exit gap
@@ -103,9 +85,7 @@ def print_maze(grid, width, height):
         line = "|"
         for x in range(width):
             cell = grid[x][y]
-            # Floor or bottom wall
             line += " " if not cell.walls['S'] else "_"
-            # East wall or open space
             line += " " if not cell.walls['E'] else "|"
         print(line)
 

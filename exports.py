@@ -20,14 +20,6 @@ def export_maze_to_json(grid, width, height, filename="maze.json"):
         json.dump(maze_dict, f, indent=4)
     print(f"Maze exported to {filename}")
 
-# Use in main block like:
-
-if __name__ == "__main__":
-    level = 10
-    maze, w, h = generate_maze(level)
-    export_maze_to_json(maze, w, h)
-
-
 
 # Inside __main__ after generating the maze
 if __name__ == "__main__":
@@ -36,5 +28,5 @@ if __name__ == "__main__":
         if i == 1:
             print_maze(maze, w, h)
 
-        export_maze_to_json(maze, w, h, f"maze{i}.json")
+        export_maze_to_json(maze, w, h, f"output_json/maze{i}.json")
     print("done")
